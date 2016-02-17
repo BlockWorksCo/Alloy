@@ -1,0 +1,4 @@
+openocd -f interface/jlink.cfg -f ./rpi2.cfg 
+
+
+

@@ -1,0 +1,19 @@
+
+
+
+export CCPREFIX=/usr/bin/arm-linux-gnueabi-
+make ARCH=arm CROSS_COMPILE=${CCPREFIX} bcm2709_defconfig
+make ARCH=arm CROSS_COMPILE=${CCPREFIX} -j 4
+
+
+cd arch/arm/boot/
+~/KernelHeaders/linux/arch/arm/boot$ ~/KernelHeaders/linux/scripts/mkknlimg zImage ReactorKernel.img
+
+
+cd ~/KernelHeaders/CycleCounterModule
+make ARCH=arm KDIR=~/KernelHeaders/linux CROSS_COMPILE=/usr/bin/arm-linux-gnueabi-
+
+
+
+
+
