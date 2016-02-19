@@ -10,7 +10,6 @@
 #define __CORESERVICES_H__
 
 
-
 #include <linux/ioctl.h>
 
 //

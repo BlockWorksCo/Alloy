@@ -1,4 +1,11 @@
 //
+// Copyright (C) BlockWorks Consulting Ltd - All Rights Reserved.
+// Unauthorized copying of this file, via any medium is strictly prohibited.
+// Proprietary and confidential.
+// Written by Steve Tickle <Steve@BlockWorks.co>, September 2014.
+//
+
+//
 // https://github.com/embedded2014/elf-loader.git
 //
 
@@ -17,8 +24,6 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
-#include "loader.h"
-#include "CoreServices.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -26,6 +31,9 @@
 #include <unistd.h>     /* exit */
 #include <sys/ioctl.h>      /* ioctl */
 #include <ctype.h>
+
+#include "Loader.h"
+#include "Alloy.h"
 
 
 #define PAGEMAP_LENGTH  8

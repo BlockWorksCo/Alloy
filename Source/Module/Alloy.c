@@ -8,15 +8,16 @@
 
 #define pr_fmt(fmt) KBUILD_MODNAME ": " fmt
 
+
 #include <linux/module.h>
-#include <asm/uaccess.h>
 #include <linux/fs.h>
-#include "CoreServices.h"
-#include <asm/smp_plat.h>
 #include <linux/irq.h>
 #include <linux/interrupt.h>
+#include <asm/uaccess.h>
+#include <asm/smp_plat.h>
 #include <asm/irq.h>
 
+#include "Alloy.h"
 
 
 #define SUCCESS 0

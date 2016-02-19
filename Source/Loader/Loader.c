@@ -3,8 +3,6 @@
 //
 
 
-#include "loader.h"
-#include "elf.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -14,7 +12,12 @@
 #include <fcntl.h>
 #include <stdint.h>
 #include <stdbool.h>
-#include "CoreServices.h"
+
+#include "Loader.h"
+#include "ELF.h"
+#include "Alloy.h"
+
+
 
 #define DBG(...) printf("ELF: " __VA_ARGS__)
 #define ERR(msg) do { perror("ELF: " msg); exit(-1); } while(0)
@@ -24,6 +27,8 @@
 #define SECTION_OFFSET(e, n) (e->sectionTable + n * sizeof(Elf32_Shdr))
 
 #define swab16(x) ( (((x) << 8) & 0xFF00) | (((x) >> 8) & 0x00FF) )
+
+
 
 
 

@@ -7,8 +7,8 @@ CC 			= arm-linux-gnueabi-gcc
 CCC			= arm-linux-gnueabi-g++
 LD 			= arm-linux-gnueabi-g++
 
-OBJS		+=	main.o \
-    		  	loader.o
+OBJS		+=	Main.o \
+    		  	Loader.o
 
 CFLAGS		= 
 

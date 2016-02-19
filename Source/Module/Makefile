@@ -8,15 +8,15 @@
 
 
 
-TARGET		= CoreServices.ko
-MDIR  		= arch/arm/CoreServices
-DRIVER_OBJS = CoreServices.o
+TARGET		= Alloy.ko
+MDIR  		= arch/arm/Alloy
+DRIVER_OBJS = Alloy.o
 CURRENT		= $(shell uname -r)
 
 PWD 		= $(shell pwd)
 DEST		= /lib/modules/$(CURRENT)/kernel/$(MDIR)
  
-obj-m              	:= CoreServices.o
+obj-m		:= Alloy.o
  
 
 
