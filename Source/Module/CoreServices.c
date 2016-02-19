@@ -9,49 +9,38 @@
 #define pr_fmt(fmt) KBUILD_MODNAME ": " fmt
 
 #include <linux/module.h>
-#include <linux/moduleparam.h>
-#include <linux/types.h>
-#include <linux/timer.h>
-#include <linux/watchdog.h>
-#include <linux/notifier.h>
-#include <linux/reboot.h>
-#include <linux/init.h>
-#include <linux/jiffies.h>
-#include <linux/kernel.h>
-#include <linux/io.h>
-#include <linux/slab.h>
 #include <asm/uaccess.h>
 #include <linux/fs.h>
-#include <mach/hardware.h>
 #include "CoreServices.h"
-#include <linux/interrupt.h>
-#include <mach/hardware.h>
-#include <asm/cacheflush.h>
 #include <asm/smp_plat.h>
 #include <linux/irq.h>
 #include <linux/interrupt.h>
 #include <asm/irq.h>
-#include <linux/dma-mapping.h>
-#include <asm/cputype.h>
-#include <linux/mm.h>  /* mmap related stuff */
-#include <asm/cacheflush.h>
-#include <asm/highmem.h>
-#include <linux/delay.h>
+
+
 
 #define SUCCESS 0
-#define DEVICE_NAME "CoreServices"
+#define DEVICE_NAME "Alloy"
 #define BUF_LEN 80
 
 #define NUMBER_OF_ELEMENTS(a)      (sizeof(a)/sizeof(a[0]))
 
 
+//
+//
+//
 FullCoreMessage     fullCoreMessages[128];
 uint32_t            head                    = 0;
 uint32_t            tail                    = 0;
 
+void*               alloyRam                = 0;
 
 
 
+
+//
+//
+//
 bool PutMessage(FullCoreMessage* message)
 {
     uint32_t    newHead     = (head + 1) % NUMBER_OF_ELEMENTS(fullCoreMessages);
@@ -68,6 +57,9 @@ bool PutMessage(FullCoreMessage* message)
     }
 }
 
+//
+//
+//
 bool GetMessage(FullCoreMessage* message)
 {
     if(tail != head)
@@ -83,32 +75,15 @@ bool GetMessage(FullCoreMessage* message)
 }
 
 
-void*       alloyRam        = 0;
 
-
-
-/*
- * This is called whenever a process attempts to open the device file
- */
+//
+//
+//
 static int device_open(struct inode* inode, struct file* file)
 {
     printk(KERN_INFO "device_open(%p)\n", file);
-#if 0
-    /*
-     * We don't want to talk to two processes at the same time
-     */
-    if (Device_Open)
-    {
-        return -EBUSY;
-    }
-
-    Device_Open++;
-    /*
-     * Initialize the message
-     */
-    Message_Ptr = Message;
-#endif    
     try_module_get(THIS_MODULE);
+
     return SUCCESS;
 }
 
@@ -119,20 +94,16 @@ static int device_open(struct inode* inode, struct file* file)
 //
 static int device_release(struct inode* inode, struct file* file)
 {
-    /*
-     * We're now ready for our next caller
-     */
-    //Device_Open--;
     module_put(THIS_MODULE);
+
     return SUCCESS;
 }
 
 
 
-/*
- * This function is called whenever a process which has already opened the
- * device file attempts to read from it.
- */
+//
+//
+//
 static ssize_t device_read(struct file* file,   /* see include/linux/fs.h   */
                            char __user* buffer,    /* buffer to be filled with data */
                            size_t length,   /* length of the buffer     */
@@ -178,28 +149,11 @@ static ssize_t device_read(struct file* file,   /* see include/linux/fs.h   */
 
 
 
-/*
- * This function is called when somebody tries to
- * write into our device file.
- */
+//
+//
+//
 static ssize_t device_write(struct file* file, const char __user* buffer, size_t length, loff_t* offset)
 {
-#if 0
-    int i;
-
-    printk(KERN_INFO "device_write(%p,%s,%d)", file, buffer, length);
-
-    for (i = 0; i < length && i < BUF_LEN; i++)
-    {
-        get_user(Message[i], buffer + i);
-    }
-
-    Message_Ptr = Message;
-    /*
-     * Again, return the number of input characters used
-     */
-    return i;
-#endif    
     return 0;
 }
 
@@ -233,10 +187,6 @@ irqreturn_t MailboxIRQHandler0(int irq, void *dev_id, struct pt_regs *regs)
     uint32_t                coreID  = read_cpuid_mpidr() & 0x3;
     uint32_t                mailboxSource       = readl( __io_address(ARM_LOCAL_MAILBOX0_CLR0) + (coreID*0x10));
     FullCoreMessage         msg;
-
-    //printk("mailboxSource = %08x\n",mailboxSource);
-
-    //memcpy_fromio( &bridge, alloyRam, sizeof(bridge) );
 
     //
     // Clear the interrupt...
@@ -382,26 +332,22 @@ void StartCore(uint32_t coreID, uint32_t entrypoint)
 
 
 
-/*
- * This function is called whenever a process tries to do an ioctl on our
- * device file. We get two extra parameters (additional to the inode and file
- * structures, which all device functions get): the number of the ioctl called
- * and the parameter given to the ioctl function.
- *
- * If the ioctl is write or read/write (meaning output is returned to the
- * calling process), the ioctl call returns the output of this function.
- *
- */
+//
+//
+//
 long device_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
 {
     printk(KERN_INFO "ioctl cmd=%d, arg=%08lx", cmd, arg);
 
-    /*
-     * Switch according to the ioctl called
-     */
+
+    //
+    //
+    //
     switch (cmd)
     {
-
+        //
+        //
+        //
         case IOCTL_START_CORE:
         {
             CoreStartData   coreStartData;
@@ -417,13 +363,22 @@ long device_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
             
         }
 
-
+        //
+        //
+        //
         case IOCTL_TRIGGER_DOORBELL:
         {
             SendDoorBellToCore( arg );
             printk(KERN_INFO "Sending doorbell to core %d\n", (int)arg);
             break;
         }
+
+        //
+        //
+        //
+        default:
+            return ~SUCCESS;
+            break;
 
     }
 
@@ -435,20 +390,17 @@ long device_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
 
 
 
-/*
- * This structure will hold the functions to be called
- * when a process does something to the device we
- * created. Since a pointer to this structure is kept in
- * the devices table, it can't be local to
- * init_module. NULL is for unimplemented functions.
- */
+
+//
+//
+//
 struct file_operations Fops =
 {
     .read           = device_read,
     .write          = device_write,
     .unlocked_ioctl = device_ioctl,
     .open           = device_open,
-    .release        = device_release,  /* a.k.a. close */
+    .release        = device_release,
 };
 
 
@@ -462,6 +414,10 @@ static int __init CoreServicesInit(void)
     uint32_t    currentSettings = 0;
 
 
+
+    //
+    //
+    //
     struct resource* r = request_mem_region(ALLOY_RAM_BASE, ALLOY_DEDICATED_RAM_SIZE, "AlloyRAM");
     if(r == NULL)
     {
@@ -472,6 +428,9 @@ static int __init CoreServicesInit(void)
         printk("request_mem_region ok.\n");
     }
 
+    //
+    //
+    //
     r = request_mem_region(0x40000000, 4096, "AlloyPeripherals");
     if(r == NULL)
     {
@@ -482,25 +441,26 @@ static int __init CoreServicesInit(void)
         printk("request_mem_region ok.\n");
     }
 
-    /*
-     * Register the character device (atleast try)
-     */
+    //
+    //
+    //
     ret_val = register_chrdev(MAJOR_NUM, DEVICE_NAME, &Fops);
-
-    /*
-     * Negative values signify an error
-     */
     if (ret_val < 0)
     {
         printk(KERN_ALERT "%s failed with %d\n", "Sorry, registering the character device ", ret_val);
         return ret_val;
     }
 
+    //
+    //
+    //
     set_irq_flags(IRQ_ARM_LOCAL_MAILBOX2, IRQF_VALID);
     irq_clear_status_flags(IRQ_ARM_LOCAL_MAILBOX2, IRQ_PER_CPU);
     irq_clear_status_flags(IRQ_ARM_LOCAL_MAILBOX2, IRQ_LEVEL);
 
-
+    //
+    //
+    //
     irq_modify_status(IRQ_ARM_LOCAL_MAILBOX0,0xffffffff,0x00000000);
     irq_modify_status(IRQ_ARM_LOCAL_MAILBOX1,0xffffffff,0x00000000);
     irq_modify_status(IRQ_ARM_LOCAL_MAILBOX2,0xffffffff,0x00000000);
@@ -579,9 +539,9 @@ static int __init CoreServicesInit(void)
 //
 static void __exit CoreServicesExit(void)
 {
-    /*
-     * Unregister the device
-     */
+    //
+    //
+    //
     unregister_chrdev(MAJOR_NUM, DEVICE_NAME);
 }
 
