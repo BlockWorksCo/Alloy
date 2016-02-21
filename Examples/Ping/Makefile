@@ -4,14 +4,15 @@
 
 
 CC 			= arm-linux-gnueabi-gcc
-CCC			= arm-linux-gnueabi-g++
-LD 			= arm-linux-gnueabi-g++
+CCC			= arm-linux-gnueabi-gcc
+LD 			= arm-linux-gnueabi-gcc
 
 OBJS		+=	Main.o \
     		  	vsnprintf.o
 
-CFLAGS 		= -g -fno-common  -march=armv7-a -mlittle-endian -mtune=cortex-a7
-LDFLAGS		= -r -fno-common  -Wl,--build-id=none -Wl,-eEntryPoint -nostdlib -L/usr/lib/arm-none-eabi  -T Main.ld
+CFLAGS 		= -g -fno-common  -march=armv7-a -mlittle-endian -mtune=cortex-a7 
+LDFLAGS		= -g -r -fno-common  -Wl,--build-id=none -Wl,-eEntryPoint -nostdlib -L/usr/lib/arm-none-eabi  -T Main.ld -Xlinker -Map=Main.map
+LIBS   		= -lgcc -lc
 
 INCLUDES	= -I../../Source/Module
 
@@ -28,7 +29,7 @@ all: Main
 
 
 Main: $(OBJS)
-	$(LD) $(LDFLAGS) -o $@ $^ 
+	$(LD) $(LDFLAGS) -o $@ $^ $(LIBS) 
 
 
 .cpp.o:

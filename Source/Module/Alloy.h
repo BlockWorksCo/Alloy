@@ -55,7 +55,7 @@ typedef struct
 // 
 // The name of the device file 
 //
-#define DEVICE_FILE_NAME "/dev/ReactorCoreServices"
+#define DEVICE_FILE_NAME "/dev/Alloy"
 
 
 //
