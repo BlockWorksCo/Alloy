@@ -118,6 +118,9 @@ typedef struct
 } CoreServicesBridge;
 
 
+extern CoreServicesBridge*     bridge;
+
+
 
 #endif
 
