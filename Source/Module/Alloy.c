@@ -16,8 +16,130 @@
 #include <asm/uaccess.h>
 #include <asm/smp_plat.h>
 #include <asm/irq.h>
-
 #include "Alloy.h"
+
+#if 0
+#include <linux/init.h>
+#include <linux/device.h>
+#include <linux/dma-mapping.h>
+#include <linux/serial_8250.h>
+#include <linux/platform_device.h>
+#include <linux/syscore_ops.h>
+#include <linux/interrupt.h>
+#include <linux/amba/bus.h>
+#include <linux/amba/clcd.h>
+#include <linux/clk-provider.h>
+#include <linux/clkdev.h>
+#include <linux/clockchips.h>
+#include <linux/cnt32_to_63.h>
+#include <linux/io.h>
+#include <linux/module.h>
+#include <linux/of_platform.h>
+#include <linux/spi/spi.h>
+#include <linux/gpio/machine.h>
+#include <linux/w1-gpio.h>
+#include <linux/pps-gpio.h>
+
+#include <linux/version.h>
+#include <linux/clkdev.h>
+#include <asm/system_info.h>
+//#include <mach/hardware.h>
+#include <asm/irq.h>
+#include <linux/leds.h>
+#include <asm/mach-types.h>
+#include <asm/cputype.h>
+#include <linux/sched_clock.h>
+
+#include <asm/mach/arch.h>
+#include <asm/mach/flash.h>
+#include <asm/mach/irq.h>
+#include <asm/mach/time.h>
+#include <asm/mach/map.h>
+
+//#include <mach/timex.h>
+//#include <mach/system.h>
+
+#include <linux/delay.h>
+
+//#include "bcm2709.h"
+//#include "include/mach/arm_control.h"
+#endif
+//#include <mach/platform.h>
+//#include "mach/arm_control.h"
+
+
+/* macros to get at IO space when running virtually */
+#define IO_ADDRESS(x)   (((x) & 0x00ffffff) + (((x) >> 4) & 0x0f000000) + 0xf0000000)
+
+#define __io_address(n)     IOMEM(IO_ADDRESS(n))
+
+#define ARM_LOCAL_BASE 0x40000000
+
+#define HW_REGISTER_RW(addr) (addr)
+#define HW_REGISTER_RO(addr) (addr)
+
+#define ARM_LOCAL_MAILBOX0_SET0     HW_REGISTER_RW(ARM_LOCAL_BASE+0x080)
+#define ARM_LOCAL_MAILBOX1_SET0     HW_REGISTER_RW(ARM_LOCAL_BASE+0x084)
+#define ARM_LOCAL_MAILBOX2_SET0     HW_REGISTER_RW(ARM_LOCAL_BASE+0x088)
+#define ARM_LOCAL_MAILBOX3_SET0     HW_REGISTER_RW(ARM_LOCAL_BASE+0x08C)
+
+#define ARM_LOCAL_MAILBOX0_SET1     HW_REGISTER_RW(ARM_LOCAL_BASE+0x090)
+#define ARM_LOCAL_MAILBOX1_SET1     HW_REGISTER_RW(ARM_LOCAL_BASE+0x094)
+#define ARM_LOCAL_MAILBOX2_SET1     HW_REGISTER_RW(ARM_LOCAL_BASE+0x098)
+#define ARM_LOCAL_MAILBOX3_SET1     HW_REGISTER_RW(ARM_LOCAL_BASE+0x09C)
+
+#define ARM_LOCAL_MAILBOX0_SET2     HW_REGISTER_RW(ARM_LOCAL_BASE+0x0A0)
+#define ARM_LOCAL_MAILBOX1_SET2     HW_REGISTER_RW(ARM_LOCAL_BASE+0x0A4)
+#define ARM_LOCAL_MAILBOX2_SET2     HW_REGISTER_RW(ARM_LOCAL_BASE+0x0A8)
+#define ARM_LOCAL_MAILBOX3_SET2     HW_REGISTER_RW(ARM_LOCAL_BASE+0x0AC)
+
+#define ARM_LOCAL_MAILBOX0_SET3     HW_REGISTER_RW(ARM_LOCAL_BASE+0x0B0)
+#define ARM_LOCAL_MAILBOX1_SET3     HW_REGISTER_RW(ARM_LOCAL_BASE+0x0B4)
+#define ARM_LOCAL_MAILBOX2_SET3     HW_REGISTER_RW(ARM_LOCAL_BASE+0x0B8)
+#define ARM_LOCAL_MAILBOX3_SET3     HW_REGISTER_RW(ARM_LOCAL_BASE+0x0BC)
+
+#define ARM_LOCAL_MAILBOX0_CLR0     HW_REGISTER_RW(ARM_LOCAL_BASE+0x0C0)
+#define ARM_LOCAL_MAILBOX1_CLR0     HW_REGISTER_RW(ARM_LOCAL_BASE+0x0C4)
+#define ARM_LOCAL_MAILBOX2_CLR0     HW_REGISTER_RW(ARM_LOCAL_BASE+0x0C8)
+#define ARM_LOCAL_MAILBOX3_CLR0     HW_REGISTER_RW(ARM_LOCAL_BASE+0x0CC)
+
+#define ARM_LOCAL_MAILBOX0_CLR1     HW_REGISTER_RW(ARM_LOCAL_BASE+0x0D0)
+#define ARM_LOCAL_MAILBOX1_CLR1     HW_REGISTER_RW(ARM_LOCAL_BASE+0x0D4)
+#define ARM_LOCAL_MAILBOX2_CLR1     HW_REGISTER_RW(ARM_LOCAL_BASE+0x0D8)
+#define ARM_LOCAL_MAILBOX3_CLR1     HW_REGISTER_RW(ARM_LOCAL_BASE+0x0DC)
+
+#define ARM_LOCAL_MAILBOX0_CLR2     HW_REGISTER_RW(ARM_LOCAL_BASE+0x0E0)
+#define ARM_LOCAL_MAILBOX1_CLR2     HW_REGISTER_RW(ARM_LOCAL_BASE+0x0E4)
+#define ARM_LOCAL_MAILBOX2_CLR2     HW_REGISTER_RW(ARM_LOCAL_BASE+0x0E8)
+#define ARM_LOCAL_MAILBOX3_CLR2     HW_REGISTER_RW(ARM_LOCAL_BASE+0x0EC)
+
+#define ARM_LOCAL_MAILBOX0_CLR3     HW_REGISTER_RW(ARM_LOCAL_BASE+0x0F0)
+#define ARM_LOCAL_MAILBOX1_CLR3     HW_REGISTER_RW(ARM_LOCAL_BASE+0x0F4)
+#define ARM_LOCAL_MAILBOX2_CLR3     HW_REGISTER_RW(ARM_LOCAL_BASE+0x0F8)
+#define ARM_LOCAL_MAILBOX3_CLR3     HW_REGISTER_RW(ARM_LOCAL_BASE+0x0FC)
+
+
+#define IRQ_ARMCTRL_START     0
+#define ARM_IRQ_LOCAL_BASE             96
+
+#define INTERRUPT_ARM_LOCAL_MAILBOX0   (ARM_IRQ_LOCAL_BASE + 4)
+#define INTERRUPT_ARM_LOCAL_MAILBOX1   (ARM_IRQ_LOCAL_BASE + 5)
+#define INTERRUPT_ARM_LOCAL_MAILBOX2   (ARM_IRQ_LOCAL_BASE + 6)
+#define INTERRUPT_ARM_LOCAL_MAILBOX3   (ARM_IRQ_LOCAL_BASE + 7)
+
+#define IRQ_ARM_LOCAL_MAILBOX0   (IRQ_ARMCTRL_START + INTERRUPT_ARM_LOCAL_MAILBOX0)
+#define IRQ_ARM_LOCAL_MAILBOX1   (IRQ_ARMCTRL_START + INTERRUPT_ARM_LOCAL_MAILBOX1)
+#define IRQ_ARM_LOCAL_MAILBOX2   (IRQ_ARMCTRL_START + INTERRUPT_ARM_LOCAL_MAILBOX2)
+#define IRQ_ARM_LOCAL_MAILBOX3   (IRQ_ARMCTRL_START + INTERRUPT_ARM_LOCAL_MAILBOX3)
+
+#define ARM_LOCAL_MAILBOX_INT_CONTROL0  HW_REGISTER_RW(ARM_LOCAL_BASE+0x050)
+#define ARM_LOCAL_MAILBOX_INT_CONTROL1  HW_REGISTER_RW(ARM_LOCAL_BASE+0x054)
+#define ARM_LOCAL_MAILBOX_INT_CONTROL2  HW_REGISTER_RW(ARM_LOCAL_BASE+0x058)
+#define ARM_LOCAL_MAILBOX_INT_CONTROL3  HW_REGISTER_RW(ARM_LOCAL_BASE+0x05C)
+
+
+
+
 
 
 #define SUCCESS 0
